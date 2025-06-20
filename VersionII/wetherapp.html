@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+     <meta name="author" content="Desire Vargas">
+
+    <link rel="stylesheet" href="/VersionII/weather/wes.css">
+         
+</head>
+<body>
+    <div class="weather-container">
+        <button class="refresh-btn" onclick="refreshWeather()">🔄</button>
+        
+        <div class="location-section">
+            <button class="location-btn" onclick="getLocation()">
+                📍 Get My Location
+            </button>
+        </div>
+
+        <div id="weatherContent" class="loading">
+            Loading weather data...
+        </div>
+    </div>
+
+    <script>
+        const weatherActivities = {
+            'clear': {
+                icon: '🌞',
+                title: 'Perfect for Outdoor Fun!',
+                description: 'Great weather for hiking, picnics, or a walk in the park. Don\'t forget your sunglasses!'
+            },
+            'clouds': {
+                icon: '📚',
+                title: 'Cozy Indoor Time',
+                description: 'Perfect for reading a book, visiting a museum, or enjoying a coffee at a café.'
+            },
+            'rain': {
+                icon: '☔',
+                title: 'Rainy Day Activities',
+                description: 'Time for indoor hobbies! Try cooking, watching movies, or visiting an indoor mall.'
+            },
+            'snow': {
+                icon: '⛄',
+                title: 'Winter Wonderland!',
+                description: 'Build a snowman, go skiing, or enjoy hot chocolate by the fireplace.'
+            },
+            'thunderstorm': {
+                icon: '🏠',
+                title: 'Stay Safe Indoors',
+                description: 'Perfect time for board games, organizing your space, or catching up on your favorite shows.'
+            },
+            'drizzle': {
+                icon: '🎨',
+                title: 'Creative Indoor Time',
+                description: 'Light rain is perfect for art projects, writing, or learning something new online.'
+            },
+            'mist': {
+                icon: '🧘',
+                title: 'Calm & Peaceful',
+                description: 'Mystical weather is great for meditation, yoga, or a gentle walk in nature.'
+            }
+        };
+
+        let currentWeatherData = null;
+
+        const weatherIcons = {
+            'clear': '☀️',
+            'clouds': '☁️',
+            'rain': '🌧️',
+            'snow': '❄️',
+            'thunderstorm': '⛈️',
+            'drizzle': '🌦️',
+            'mist': '🌫️',
+            'fog': '🌫️',
+            'haze': '🌫️'
+        };
+
+        const detailIcons = {
+            humidity: '💧',
+            windSpeed: '💨',
+            pressure: '🌡️',
+            visibility: '👁️'
+        };
+
+        function getLocation() {
+            if (navigator.geolocation) {
+                document.getElementById('weatherContent').innerHTML = '<div class="loading">Getting your location...</div>';
+                navigator.geolocation.getCurrentPosition(
+                    position => {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        getWeatherData(lat, lon);
+                    },
+                    error => {
+                        showError('Location access denied. Using default location (New York).');
+                        getWeatherData(40.7128, -74.0060); // Default to New York
+                    }
+                );
+            } else {
+                showError('Geolocation not supported. Using default location.');
+                getWeatherData(40.7128, -74.0060);
+            }
+        }
+
+        async function getWeatherData(lat, lon) {
+            try {
+                // Simulated weather data (in a real app, you'd use an API like OpenWeatherMap)
+                const weatherData = generateMockWeatherData(lat, lon);
+                currentWeatherData = weatherData;
+                displayWeather(weatherData);
+            } catch (error) {
+                showError('Failed to fetch weather data. Please try again.');
+            }
+        }
+
+        function generateMockWeatherData(lat, lon) {
+            const conditions = ['clear', 'clouds', 'rain', 'snow', 'thunderstorm'];
+            const cities = ['New York', 'Los Angeles', 'Chicago', 'Houston', 'Phoenix', 'Philadelphia'];
+            
+            const condition = conditions[Math.floor(Math.random() * conditions.length)];
+            const temp = Math.floor(Math.random() * 35) + 5; // 5-40°C
+            const city = cities[Math.floor(Math.random() * cities.length)];
+            
+            return {
+                main: {
+                    temp: temp,
+                    humidity: Math.floor(Math.random() * 40) + 40,
+                    pressure: Math.floor(Math.random() * 50) + 1000
+                },
+                weather: [{
+                    main: condition,
+                    description: condition === 'clear' ? 'clear sky' : 
+                                condition === 'clouds' ? 'scattered clouds' :
+                                condition === 'rain' ? 'light rain' :
+                                condition === 'snow' ? 'light snow' : 'thunderstorm'
+                }],
+                wind: {
+                    speed: Math.floor(Math.random() * 15) + 5
+                },
+                visibility: Math.floor(Math.random() * 5000) + 5000,
+                name: city,
+                forecast: generateForecast()
+            };
+        }
+
+        function generateForecast() {
+            const forecast = [];
+            const conditions = ['clear', 'clouds', 'rain', 'snow'];
+            
+            for (let i = 1; i <= 5; i++) {
+                const time = new Date();
+                time.setHours(time.getHours() + i * 3);
+                
+                forecast.push({
+                    time: time.getHours() + ':00',
+                    condition: conditions[Math.floor(Math.random() * conditions.length)],
+                    temp: Math.floor(Math.random() * 10) + 15
+                });
+            }
+            
+            return forecast;
+        }
+
+        function displayWeather(data) {
+            const icon = weatherIcons[data.weather[0].main.toLowerCase()] || '🌤️';
+            const condition = data.weather[0].main.toLowerCase();
+            const activity = weatherActivities[condition] || weatherActivities['clouds'];
+            
+            const weatherHTML = `
+                <div class="weather-main">
+                    <div class="weather-icon" onclick="animateIcon(this)">${icon}</div>
+                    <div class="temperature">${Math.round(data.main.temp)}°C</div>
+                    <div class="description">${data.weather[0].description}</div>
+                    <div class="location">📍 ${data.name}</div>
+                </div>
+                
+                <div class="activity-suggestion" onclick="animateCard(this)">
+                    <span class="activity-icon">${activity.icon}</span>
+                    <div class="activity-title">${activity.title}</div>
+                    <div class="activity-description">${activity.description}</div>
+                </div>
+                
+                <div class="weather-details">
+                    <div class="detail-card" onclick="animateCard(this)">
+                        <span class="detail-icon">${detailIcons.humidity}</span>
+                        <div class="detail-value">${data.main.humidity}%</div>
+                        <div class="detail-label">Humidity</div>
+                    </div>
+                    <div class="detail-card" onclick="animateCard(this)">
+                        <span class="detail-icon">${detailIcons.windSpeed}</span>
+                        <div class="detail-value">${data.wind.speed} m/s</div>
+                        <div class="detail-label">Wind Speed</div>
+                    </div>
+                    <div class="detail-card" onclick="animateCard(this)">
+                        <span class="detail-icon">${detailIcons.pressure}</span>
+                        <div class="detail-value">${data.main.pressure} hPa</div>
+                        <div class="detail-label">Pressure</div>
+                    </div>
+                    <div class="detail-card" onclick="animateCard(this)">
+                        <span class="detail-icon">${detailIcons.visibility}</span>
+                        <div class="detail-value">${(data.visibility / 1000).toFixed(1)} km</div>
+                        <div class="detail-label">Visibility</div>
+                    </div>
+                </div>
+                
+                <div class="forecast-section">
+                    <div class="forecast-title">Hourly Forecast</div>
+                    <div class="forecast-container">
+                        ${data.forecast.map(item => `
+                            <div class="forecast-item" onclick="animateCard(this)">
+                                <div class="forecast-time">${item.time}</div>
+                                <div class="forecast-icon">${weatherIcons[item.condition] || '🌤️'}</div>
+                                <div class="forecast-temp">${item.temp}°</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('weatherContent').innerHTML = weatherHTML;
+        }
+
+        function animateIcon(element) {
+            element.style.animation = 'none';
+            setTimeout(() => {
+                element.style.animation = 'float 0.5s ease-in-out';
+            }, 10);
+        }
+
+        function animateCard(element) {
+            element.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 150);
+        }
+
+        function refreshWeather() {
+            if (currentWeatherData) {
+                document.getElementById('weatherContent').innerHTML = '<div class="loading">Refreshing weather data...</div>';
+                setTimeout(() => {
+                    const newData = generateMockWeatherData(0, 0);
+                    currentWeatherData = newData;
+                    displayWeather(newData);
+                }, 1000);
+            } else {
+                getLocation();
+            }
+        }
+
+        function showError(message) {
+            document.getElementById('weatherContent').innerHTML = `
+                <div class="error">${message}</div>
+                <button class="location-btn" onclick="getLocation()" style="margin-top: 20px;">
+                    🔄 Try Again
+                </button>
+            `;
+        }
+
+        // Initialize the app
+        window.onload = function() {
+            getLocation();
+        };
+    </script>
+</body>
+</html>
