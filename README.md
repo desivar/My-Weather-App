@@ -64,4 +64,4 @@ The app displays personalized activity recommendations based on current weather:
 
 
 
-Try clicking the "Get My Location" button to see the app in action with the new pink theme and activity suggestions!RetryClaude can make mistakes. Please double-check responses. Sonnet 4
+Try clicking the "Get My Location" button to see the app in action!
